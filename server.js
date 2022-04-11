@@ -1,13 +1,33 @@
-const express = require('express')
-const app = express()
-const bodyParser = require('body-parser')
+const express = require("express");
+const bodyParser = require("body-parser");
+const mongoose = require("mongoose");
+require("dotenv").config();
 
-app.use(bodyParser.json())
+const app = express();
+
+app.use(bodyParser.json());
 
 app.get("/", (req, res, next) => {
-    res.json({
-        message: 'Hello World!'
-    })
-})
+  res.json({
+    message: "Hello World!",
+  });
+});
 
-app.listen(4000)
+app.use((err, req, res, next) => {
+  if (res.headerSent) {
+    return next(error);
+  }
+
+  res.status(error.code || 500).json({
+    message: error.message || "An unknow error ocurred!",
+  });
+});
+
+mongoose
+  .connect(process.env.MONGODB_SRV)
+  .then(() => {
+    app.listen(5000);
+  })
+  .catch((err) => {
+    console.log(err);
+  });
