@@ -5,7 +5,11 @@ require("dotenv").config();
 
 const app = express();
 
+const usersRoutes = require("./routes/users-routes");
+
 app.use(bodyParser.json());
+
+app.use(usersRoutes);
 
 app.get("/", (req, res, next) => {
   res.json({
@@ -13,13 +17,15 @@ app.get("/", (req, res, next) => {
   });
 });
 
+app.use("/api/user", usersRoutes);
+
 app.use((err, req, res, next) => {
   if (res.headerSent) {
-    return next(error);
+    return next(err);
   }
 
-  res.status(error.code || 500).json({
-    message: error.message || "An unknow error ocurred!",
+  res.status(err.code || 500).json({
+    message: err.message || "An unknow error ocurred!",
   });
 });
 
