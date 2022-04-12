@@ -8,10 +8,13 @@ require("dotenv").config();
 
 const app = express();
 
+const cors = require("./middlewares/cors");
+
 const usersRoutes = require("./routes/users-routes");
 const postsRoutes = require("./routes/posts-routes");
 const commentsRoutes = require("./routes/comments-routes");
 
+app.use(cors);
 app.use(bodyParser.json());
 app.use("/uploads/images", express.static(path.join("uploads", "images")));
 
