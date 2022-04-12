@@ -162,7 +162,7 @@ const getPostDetails = async (req, res, next) => {
 
   let post;
   try {
-    post = await Post.findById(postId);
+    post = await Post.findById(postId).$where.populate("comments likes");
   } catch (err) {
     return next(new HttpError("Fetching post failed.", 500));
   }

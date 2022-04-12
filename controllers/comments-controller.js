@@ -1,10 +1,30 @@
+const { default: mongoose } = require("mongoose");
+
 const Comment = require("../models/comment");
+const User = require("../models/user");
+const Post = require("../models/post");
 const HttpError = require("../models/http-errors");
 
 const createComment = async (req, res, next) => {
   const { content, post } = req.body;
   const creator = req.userData.id;
   const date = new Date();
+
+  let fetchedUser;
+  try {
+    fetchedUser = await User.findById(creator);
+    if (!fetchedUser) return next(new HttpError("User doesn't exist.", 404));
+  } catch (err) {
+    return next(new HttpError("Fetching user failed.", 500));
+  }
+
+  let fetchedPost;
+  try {
+    fetchedPost = await Post.findById(post);
+    if (!fetchedPost) return next(new HttpError("Post doesn't exist.", 404));
+  } catch (err) {
+    return next(new HttpError("Fetching post failed.", 500));
+  }
 
   const createdComment = new Comment({
     content,
@@ -14,8 +34,14 @@ const createComment = async (req, res, next) => {
   });
 
   try {
-    await createdComment.save();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    await createdComment.save({ session, validateModifiedOnly: true });
+    fetchedPost.comments.push(createdComment);
+    await fetchedPost.save({ session, validateModifiedOnly: true });
+    session.commitTransaction();
   } catch (err) {
+    console.log(err);
     return next(new HttpError("Saving comment failed.", 500));
   }
 
