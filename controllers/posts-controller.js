@@ -77,7 +77,7 @@ const deletePost = async (req, res, next) => {
 
   let fetchedPost;
   try {
-    fetchedPost = await Post.findById(postId);
+    fetchedPost = await Post.findById(postId).populate("creator");
   } catch (err) {
     return next(new HttpError(err.message));
   }
@@ -86,21 +86,25 @@ const deletePost = async (req, res, next) => {
     return next(new HttpError("Post doesn't exist.", 404));
   }
 
-  if (req.userData.id !== fetchedPost.creator.toString()) {
+  if (req.userData.id !== fetchedPost.creator.id.toString()) {
     console.log(req.userData.id);
     console.log(fetchedPost.creator);
     return next(new HttpError("You can't delete this post.", 401));
   }
 
   try {
-    await fetchedPost.remove();
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    fetchedPost.creator.posts.pull(fetchedPost);
+    await fetchedPost.creator.save({ session, validateModifiedOnly: true });
+    await fetchedPost.remove({ session, validateModifiedOnly: true });
+    session.commitTransaction();
   } catch (err) {
     return next(new HttpError(err.message));
   }
 
   res.json({
     message: "Post deleted successfully.",
-    post: fetchedPost,
   });
 };
 
