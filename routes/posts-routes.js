@@ -15,7 +15,7 @@ router.post(
   postsController.createPost
 );
 
-// router.delete("/:pid", checkAuth);
+router.delete("/:pid", checkAuth, postsController.deletePost);
 
 // router.patch("/:pid", checkAuth);
 

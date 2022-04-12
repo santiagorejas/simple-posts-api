@@ -6,6 +6,33 @@ const User = require("../models/user");
 
 const POSTS_PER_PAGE = 2;
 
+const getPosts = async (req, res, next) => {
+  const page = req.query.page;
+
+  let totalItems = 0;
+  let posts = [];
+  try {
+    totalItems = await Post.find().count();
+    posts = await Post.find()
+      .skip((page - 1) * POSTS_PER_PAGE)
+      .limit(POSTS_PER_PAGE)
+      .populate("creator", "nickname image")
+      .select("title creator image");
+  } catch (err) {
+    return next(new HttpError("Could not fetch posts, please try later.", 500));
+  }
+
+  res.json({
+    message: `Page number:  ${page}`,
+    posts,
+    totalPosts: totalItems,
+    hasPreviousPage: page > 1,
+    hasNextPage: POSTS_PER_PAGE * page < totalItems,
+    previousPage: page - 1,
+    nextPage: +page + 1,
+  });
+};
+
 const createPost = async (req, res, next) => {
   let user;
   try {
@@ -45,31 +72,38 @@ const createPost = async (req, res, next) => {
   });
 };
 
-const getPosts = async (req, res, next) => {
-  const page = req.query.page;
+const deletePost = async (req, res, next) => {
+  const postId = req.params.pid;
 
-  let totalItems = 0;
-  let posts = [];
+  let fetchedPost;
   try {
-    totalItems = await Post.find().count();
-    posts = await Post.find()
-      .select("title creator image")
-      .skip((page - 1) * POSTS_PER_PAGE)
-      .limit(POSTS_PER_PAGE);
+    fetchedPost = await Post.findById(postId);
   } catch (err) {
-    return next(new HttpError("Could not fetch posts, please try later.", 500));
+    return next(new HttpError(err.message));
+  }
+
+  if (!fetchedPost) {
+    return next(new HttpError("Post doesn't exist.", 404));
+  }
+
+  if (req.userData.id !== fetchedPost.creator.toString()) {
+    console.log(req.userData.id);
+    console.log(fetchedPost.creator);
+    return next(new HttpError("You can't delete this post.", 401));
+  }
+
+  try {
+    await fetchedPost.remove();
+  } catch (err) {
+    return next(new HttpError(err.message));
   }
 
   res.json({
-    message: `Page number:  ${page}`,
-    posts,
-    totalPosts: totalItems,
-    hasPreviousPage: page > 1,
-    hasNextPage: POSTS_PER_PAGE * page < totalItems,
-    previousPage: page - 1,
-    nextPage: +page + 1,
+    message: "Post deleted successfully.",
+    post: fetchedPost,
   });
 };
 
 exports.createPost = createPost;
 exports.getPosts = getPosts;
+exports.deletePost = deletePost;
