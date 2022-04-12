@@ -21,6 +21,8 @@ router.patch("/:pid", checkAuth, postsController.updatePost);
 
 router.get("/user/:uid", postsController.getPostsByUserId);
 
+router.post("/like/:pid", checkAuth, postsController.likePost);
+
 router.get("/:pid", postsController.getPostDetails);
 
 module.exports = router;

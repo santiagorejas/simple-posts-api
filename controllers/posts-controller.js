@@ -158,13 +158,11 @@ const getPostsByUserId = async (req, res, next) => {
 };
 
 const getPostDetails = async (req, res, next) => {
-  // TODO: populate post with likes and comments.
-
   const postId = req.params.pid;
 
   let post;
   try {
-    post = await Post.findById(postId).$where.populate("comments likes");
+    post = await Post.findById(postId).populate("comments likes");
   } catch (err) {
     return next(new HttpError("Fetching post failed.", 500));
   }
@@ -174,9 +172,51 @@ const getPostDetails = async (req, res, next) => {
   });
 };
 
+const likePost = async (req, res, next) => {
+  const { like } = req.body;
+
+  const postId = req.params.pid;
+
+  let fetchedPost;
+  try {
+    fetchedPost = await Post.findById(postId);
+  } catch (err) {
+    return next(new HttpError("Fetching post failed.", 500));
+  }
+
+  if (!fetchedPost) {
+    return next(new HttpError("Post doesn't exist", 404));
+  }
+
+  try {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    const user = await User.findById(req.userData.id);
+
+    if (like) {
+      fetchedPost.likes.push(req.userData.id);
+      user.likes.push(fetchedPost);
+    } else {
+      fetchedPost.likes.pull(req.userData.id);
+      user.likes.pull(fetchedPost);
+    }
+
+    await user.save({ session, validateModifiedOnly: true });
+    await fetchedPost.save({ session, validateModifiedOnly: true });
+
+    session.commitTransaction();
+  } catch (err) {
+    return next(new HttpError("Saving like failed.", 500));
+  }
+
+  res.json({ message: "Like saved successfully!" });
+};
+
 exports.createPost = createPost;
 exports.getPosts = getPosts;
 exports.deletePost = deletePost;
 exports.updatePost = updatePost;
 exports.getPostsByUserId = getPostsByUserId;
 exports.getPostDetails = getPostDetails;
+exports.likePost = likePost;
