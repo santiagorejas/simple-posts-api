@@ -69,7 +69,13 @@ const deleteComment = async (req, res, next) => {
   }
 
   try {
-    await comment.remove();
+    const post = await Post.findById(comment.post);
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    post.comments.pull(comment);
+    await post.save({ session, validateModifiedOnly: true });
+    await comment.remove({ session, validateModifiedOnly: true });
+    session.commitTransaction();
   } catch (err) {
     return next(new HttpError("Deleting comment failed.", 500));
   }

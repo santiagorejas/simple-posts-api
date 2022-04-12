@@ -3,6 +3,7 @@ const HttpError = require("../models/http-errors");
 
 const Post = require("../models/post");
 const User = require("../models/user");
+const Comment = require("../models/comment");
 
 const POSTS_PER_PAGE = 2;
 
@@ -96,6 +97,7 @@ const deletePost = async (req, res, next) => {
     fetchedPost.creator.posts.pull(fetchedPost);
     await fetchedPost.creator.save({ session, validateModifiedOnly: true });
     await fetchedPost.remove({ session, validateModifiedOnly: true });
+    await Comment.deleteMany({ _id: { $in: fetchedPost.comments } });
     session.commitTransaction();
   } catch (err) {
     return next(new HttpError(err.message));
