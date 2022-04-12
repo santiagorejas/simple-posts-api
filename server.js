@@ -9,10 +9,10 @@ require("dotenv").config();
 const app = express();
 
 const usersRoutes = require("./routes/users-routes");
+const postsRoutes = require("./routes/posts-routes");
 
 app.use(bodyParser.json());
 app.use("/uploads/images", express.static(path.join("uploads, images")));
-app.use(usersRoutes);
 
 app.get("/", (req, res, next) => {
   res.json({
@@ -21,6 +21,7 @@ app.get("/", (req, res, next) => {
 });
 
 app.use("/api/user", usersRoutes);
+app.use("/api/post", postsRoutes);
 
 app.use((err, req, res, next) => {
   if (req.file) {

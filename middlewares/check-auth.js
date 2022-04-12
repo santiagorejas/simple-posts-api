@@ -17,7 +17,9 @@ module.exports = (req, res, next) => {
     const decodedToken = jwt.verify(token, process.env.JWT_KEY);
 
     req.userData = {
+      id: decodedToken.id,
       nickname: decodedToken.nickname,
+      email: decodedToken.email,
     };
 
     next();

@@ -4,11 +4,12 @@ const jwt = require("jsonwebtoken");
 const HttpError = require("../models/http-errors");
 const User = require("../models/user");
 
-const generateToken = (nickname, email) => {
+const generateToken = (id, nickname, email) => {
   let token;
   try {
     token = jwt.sign(
       {
+        id,
         nickname,
         email,
       },
@@ -49,6 +50,7 @@ const signup = async (req, res, next) => {
 
   let hashedPassword;
   try {
+    console.log("PASS", password);
     hashedPassword = await bcrypt.hash(password, 12);
   } catch (err) {
     return next(
@@ -60,10 +62,13 @@ const signup = async (req, res, next) => {
     nickname,
     email,
     password: hashedPassword,
-    image: req.file.path,
     posts: [],
     likes: [],
   });
+
+  if (req.file) {
+    createdUser.image = req.file.path;
+  }
 
   try {
     await createdUser.save();
@@ -71,7 +76,7 @@ const signup = async (req, res, next) => {
     return next(new HttpError("Saving created user failed.", 500));
   }
 
-  const token = generateToken(nickname, email);
+  const token = generateToken(createdUser.id, nickname, email);
 
   res.json({
     nickname: createdUser.nickname,
@@ -101,7 +106,7 @@ const login = async (req, res, next) => {
     return next(new HttpError("Password verification failed.", 500));
   }
 
-  const token = generateToken(nickname, existingUser.email);
+  const token = generateToken(existingUser.id, nickname, existingUser.email);
 
   res.json({
     nickname: existingUser.nickname,
