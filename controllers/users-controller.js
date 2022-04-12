@@ -60,7 +60,7 @@ const signup = async (req, res, next) => {
     nickname,
     email,
     password: hashedPassword,
-    image: "image-url",
+    image: req.file.path,
     posts: [],
     likes: [],
   });

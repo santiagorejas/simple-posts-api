@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
+const fileUpload = require("../middlewares/file-upload");
+
 const usersController = require("../controllers/users-controller");
 
 router.get("/user", (req, res, next) => {
@@ -9,6 +11,6 @@ router.get("/user", (req, res, next) => {
 
 router.post("/login", usersController.login);
 
-router.post("/signup", usersController.signup);
+router.post("/signup", fileUpload.single("image"), usersController.signup);
 
 module.exports = router;
