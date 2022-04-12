@@ -21,6 +21,6 @@ router.patch("/:pid", checkAuth, postsController.updatePost);
 
 router.get("/user/:uid", postsController.getPostsByUserId);
 
-//router.get("/:pid");
+router.get("/:pid", postsController.getPostDetails);
 
 module.exports = router;

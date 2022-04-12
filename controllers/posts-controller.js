@@ -155,8 +155,26 @@ const getPostsByUserId = async (req, res, next) => {
   });
 };
 
+const getPostDetails = async (req, res, next) => {
+  // TODO: populate post with likes and comments.
+
+  const postId = req.params.pid;
+
+  let post;
+  try {
+    post = await Post.findById(postId);
+  } catch (err) {
+    return next(new HttpError("Fetching post failed.", 500));
+  }
+
+  res.json({
+    post,
+  });
+};
+
 exports.createPost = createPost;
 exports.getPosts = getPosts;
 exports.deletePost = deletePost;
 exports.updatePost = updatePost;
 exports.getPostsByUserId = getPostsByUserId;
+exports.getPostDetails = getPostDetails;
