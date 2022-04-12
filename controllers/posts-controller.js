@@ -104,6 +104,41 @@ const deletePost = async (req, res, next) => {
   });
 };
 
+const updatePost = async (req, res, next) => {
+  const postId = req.params.pid;
+
+  const { title, description } = req.body;
+
+  let fetchedPost;
+  try {
+    fetchedPost = await Post.findById(postId);
+  } catch (err) {
+    return next(new HttpError("Failed to fetch post.", 500));
+  }
+
+  if (!fetchedPost) return next(new HttpError("Post doesn't exist.", 404));
+
+  if (req.userData.id !== fetchedPost.creator.toString())
+    return next(
+      new HttpError("You don't have access to update this post.", 401)
+    );
+
+  if (title) fetchedPost.title = title;
+
+  if (description) fetchedPost.description = description;
+
+  try {
+    fetchedPost.save();
+  } catch (err) {
+    return next(new HttpError("Failed to update the post.", 500));
+  }
+
+  res.json({
+    post: fetchedPost,
+  });
+};
+
 exports.createPost = createPost;
 exports.getPosts = getPosts;
 exports.deletePost = deletePost;
+exports.updatePost = updatePost;

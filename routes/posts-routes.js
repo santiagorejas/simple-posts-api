@@ -17,7 +17,7 @@ router.post(
 
 router.delete("/:pid", checkAuth, postsController.deletePost);
 
-// router.patch("/:pid", checkAuth);
+router.patch("/:pid", checkAuth, postsController.updatePost);
 
 // router.get("/user/:uid");
 
