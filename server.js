@@ -13,7 +13,7 @@ const postsRoutes = require("./routes/posts-routes");
 const commentsRoutes = require("./routes/comments-routes");
 
 app.use(bodyParser.json());
-app.use("/uploads/images", express.static(path.join("uploads, images")));
+app.use("/uploads/images", express.static(path.join("uploads", "images")));
 
 app.get("/", (req, res, next) => {
   res.json({
