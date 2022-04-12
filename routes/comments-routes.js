@@ -7,6 +7,6 @@ const commentsController = require("../controllers/comments-controller");
 
 router.post("/", checkAuth, commentsController.createComment);
 
-router.delete("/", commentsController.deleteComment);
+router.delete("/:cid", checkAuth, commentsController.deleteComment);
 
 module.exports = router;
