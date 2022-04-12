@@ -87,8 +87,6 @@ const deletePost = async (req, res, next) => {
   }
 
   if (req.userData.id !== fetchedPost.creator.id.toString()) {
-    console.log(req.userData.id);
-    console.log(fetchedPost.creator);
     return next(new HttpError("You can't delete this post.", 401));
   }
 
@@ -142,7 +140,23 @@ const updatePost = async (req, res, next) => {
   });
 };
 
+const getPostsByUserId = async (req, res, next) => {
+  const userId = req.params.uid;
+
+  let fetchedPosts;
+  try {
+    fetchedPosts = await Post.find({ creator: userId });
+  } catch (err) {
+    return next(new HttpError("Fetching posts failed.", 500));
+  }
+
+  res.json({
+    post: fetchedPosts,
+  });
+};
+
 exports.createPost = createPost;
 exports.getPosts = getPosts;
 exports.deletePost = deletePost;
 exports.updatePost = updatePost;
+exports.getPostsByUserId = getPostsByUserId;
