@@ -6,7 +6,7 @@ const fileUpload = require("../middlewares/file-upload");
 
 const postsController = require("../controllers/posts-controller");
 
-//router.get("/");
+router.get("/", postsController.getPosts);
 
 router.post(
   "/",

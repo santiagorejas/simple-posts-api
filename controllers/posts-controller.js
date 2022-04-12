@@ -4,6 +4,8 @@ const HttpError = require("../models/http-errors");
 const Post = require("../models/post");
 const User = require("../models/user");
 
+const POSTS_PER_PAGE = 2;
+
 const createPost = async (req, res, next) => {
   let user;
   try {
@@ -43,4 +45,31 @@ const createPost = async (req, res, next) => {
   });
 };
 
+const getPosts = async (req, res, next) => {
+  const page = req.query.page;
+
+  let totalItems = 0;
+  let posts = [];
+  try {
+    totalItems = await Post.find().count();
+    posts = await Post.find()
+      .select("title creator image")
+      .skip((page - 1) * POSTS_PER_PAGE)
+      .limit(POSTS_PER_PAGE);
+  } catch (err) {
+    return next(new HttpError("Could not fetch posts, please try later.", 500));
+  }
+
+  res.json({
+    message: `Page number:  ${page}`,
+    posts,
+    totalPosts: totalItems,
+    hasPreviousPage: page > 1,
+    hasNextPage: POSTS_PER_PAGE * page < totalItems,
+    previousPage: page - 1,
+    nextPage: +page + 1,
+  });
+};
+
 exports.createPost = createPost;
+exports.getPosts = getPosts;
