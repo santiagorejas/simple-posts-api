@@ -14,7 +14,7 @@ const commentSchema = new Schema({
     ref: "Post",
   },
   content: {
-    type: Strinng,
+    type: String,
     required: true,
   },
   date: {
