@@ -9,12 +9,19 @@ const POSTS_PER_PAGE = 20;
 
 const getPosts = async (req, res, next) => {
   const page = req.query.page;
+  const name = req.query.name;
+
+  const findOptions = name
+    ? {
+        title: { $regex: name, $options: "i" },
+      }
+    : null;
 
   let totalItems = 0;
   let posts = [];
   try {
-    totalItems = await Post.find().count();
-    posts = await Post.find()
+    totalItems = await Post.find(findOptions).count();
+    posts = await Post.find(findOptions)
       .skip((page - 1) * POSTS_PER_PAGE)
       .limit(POSTS_PER_PAGE)
       .populate("creator", "nickname image")
