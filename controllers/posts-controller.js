@@ -5,7 +5,7 @@ const Post = require("../models/post");
 const User = require("../models/user");
 const Comment = require("../models/comment");
 
-const POSTS_PER_PAGE = 2;
+const POSTS_PER_PAGE = 20;
 
 const getPosts = async (req, res, next) => {
   const page = req.query.page;
@@ -25,7 +25,7 @@ const getPosts = async (req, res, next) => {
 
   res.json({
     message: `Page number:  ${page}`,
-    posts,
+    posts: posts.map((post) => post.toObject({ getters: true })),
     totalPosts: totalItems,
     hasPreviousPage: page > 1,
     hasNextPage: POSTS_PER_PAGE * page < totalItems,
@@ -162,7 +162,14 @@ const getPostDetails = async (req, res, next) => {
 
   let post;
   try {
-    post = await Post.findById(postId).populate("comments likes");
+    post = await Post.findById(postId)
+      .populate("comments likes")
+      .populate("creator", "nickname image");
+    await Promise.all(
+      post.comments.map((comment) =>
+        comment.populate("author", "nickname image")
+      )
+    );
   } catch (err) {
     return next(new HttpError("Fetching post failed.", 500));
   }

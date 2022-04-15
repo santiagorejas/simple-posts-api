@@ -110,9 +110,36 @@ const login = async (req, res, next) => {
   res.json({
     nickname: existingUser.nickname,
     email: existingUser.email,
+    id: existingUser._id,
     token,
+  });
+};
+
+const getProfileData = async (req, res, next) => {
+  const userId = req.userData.id;
+
+  let userData;
+  try {
+    userData = await User.findById(userId);
+  } catch (err) {
+    console.log(err);
+    return next(new HttpError("Fetching user data failed.", 500));
+  }
+
+  if (!userData) {
+    return next(new HttpError("User doesn't exist.", 404));
+  }
+
+  res.json({
+    profile: {
+      image: userData.image,
+      nickname: userData.nickname,
+      numberOfPosts: userData.posts.length,
+      numberOfLikes: userData.likes.length,
+    },
   });
 };
 
 exports.signup = signup;
 exports.login = login;
+exports.getProfileData = getProfileData;
