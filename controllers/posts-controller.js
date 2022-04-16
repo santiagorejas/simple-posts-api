@@ -5,7 +5,7 @@ const Post = require("../models/post");
 const User = require("../models/user");
 const Comment = require("../models/comment");
 
-const POSTS_PER_PAGE = 20;
+const POSTS_PER_PAGE = 12;
 
 const getPosts = async (req, res, next) => {
   const page = req.query.page;
@@ -20,8 +20,9 @@ const getPosts = async (req, res, next) => {
   let totalItems = 0;
   let posts = [];
   try {
-    totalItems = await Post.find(findOptions).count();
+    totalItems = await Post.find(findOptions).sort({ date: -1 }).count();
     posts = await Post.find(findOptions)
+      .sort({ date: -1 })
       .skip((page - 1) * POSTS_PER_PAGE)
       .limit(POSTS_PER_PAGE)
       .populate("creator", "nickname image")
@@ -38,6 +39,8 @@ const getPosts = async (req, res, next) => {
     hasNextPage: POSTS_PER_PAGE * page < totalItems,
     previousPage: page - 1,
     nextPage: +page + 1,
+    totalPages: Math.ceil(totalItems / POSTS_PER_PAGE),
+    currentPage: +page,
   });
 };
 
@@ -54,12 +57,14 @@ const createPost = async (req, res, next) => {
   }
 
   const { title, description } = req.body;
+  const date = new Date();
 
   const createdPost = new Post({
     title,
     image: req.file.path,
     description,
     creator: req.userData.id,
+    date,
     likes: [],
     comments: [],
   });

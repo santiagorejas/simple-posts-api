@@ -20,6 +20,10 @@ const postSchema = new Schema({
     required: true,
     ref: "User",
   },
+  date: {
+    type: Date,
+    required: true,
+  },
   likes: [
     {
       type: mongoose.Types.ObjectId,
