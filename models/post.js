@@ -24,6 +24,10 @@ const postSchema = new Schema({
     type: Date,
     required: true,
   },
+  category: {
+    type: String,
+    required: true,
+  },
   likes: [
     {
       type: mongoose.Types.ObjectId,

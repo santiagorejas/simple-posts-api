@@ -4,18 +4,29 @@ const HttpError = require("../models/http-errors");
 const Post = require("../models/post");
 const User = require("../models/user");
 const Comment = require("../models/comment");
+const Categories = require("../constant/categories");
 
 const POSTS_PER_PAGE = 12;
 
 const getPosts = async (req, res, next) => {
-  const page = req.query.page;
-  const name = req.query.name;
+  let { page, name, category } = req.query;
 
-  const findOptions = name
-    ? {
-        title: { $regex: name, $options: "i" },
-      }
-    : null;
+  if (!page) {
+    page = 1;
+  }
+
+  const findOptions = {};
+
+  if (name) {
+    findOptions.title = {
+      $regex: name,
+      $options: "i",
+    };
+  }
+
+  if (category) {
+    findOptions.category = category;
+  }
 
   let totalItems = 0;
   let posts = [];
@@ -56,7 +67,12 @@ const createPost = async (req, res, next) => {
     return next(new HttpError("User not found.", 404));
   }
 
-  const { title, description } = req.body;
+  const { title, description, category } = req.body;
+
+  if (!Categories.includes(category)) {
+    return next(new HttpError("Category doesn't exist.", 406));
+  }
+
   const date = new Date();
 
   const createdPost = new Post({
@@ -64,6 +80,7 @@ const createPost = async (req, res, next) => {
     image: req.file.path,
     description,
     creator: req.userData.id,
+    category,
     date,
     likes: [],
     comments: [],
