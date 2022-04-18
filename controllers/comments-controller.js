@@ -12,7 +12,7 @@ const createComment = async (req, res, next) => {
 
   let fetchedUser;
   try {
-    fetchedUser = await User.findById(creator);
+    fetchedUser = await User.findById(creator).select("nickname image");
     if (!fetchedUser) return next(new HttpError("User doesn't exist.", 404));
   } catch (err) {
     return next(new HttpError("Fetching user failed.", 500));
@@ -44,6 +44,8 @@ const createComment = async (req, res, next) => {
     console.log(err);
     return next(new HttpError("Saving comment failed.", 500));
   }
+
+  createdComment.author = fetchedUser;
 
   res.json({
     comment: createdComment,
