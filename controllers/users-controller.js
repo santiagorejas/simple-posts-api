@@ -111,12 +111,13 @@ const login = async (req, res, next) => {
     nickname: existingUser.nickname,
     email: existingUser.email,
     id: existingUser._id,
+    likes: existingUser.likes,
     token,
   });
 };
 
 const getProfileData = async (req, res, next) => {
-  const userId = req.userData.id;
+  const userId = req.params.uid;
 
   let userData;
   try {
@@ -134,8 +135,8 @@ const getProfileData = async (req, res, next) => {
     profile: {
       image: userData.image,
       nickname: userData.nickname,
-      numberOfPosts: userData.posts.length,
-      numberOfLikes: userData.likes.length,
+      likes: userData.likes,
+      posts: userData.posts,
     },
   });
 };

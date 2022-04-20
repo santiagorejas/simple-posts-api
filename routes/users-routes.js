@@ -14,6 +14,6 @@ router.post("/login", usersController.login);
 
 router.post("/signup", fileUpload.single("image"), usersController.signup);
 
-router.get("/profile", checkAuth, usersController.getProfileData);
+router.get("/profile/:uid", usersController.getProfileData);
 
 module.exports = router;
