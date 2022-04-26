@@ -31,7 +31,7 @@ const getPosts = async (req, res, next) => {
   let totalItems = 0;
   let posts = [];
   try {
-    totalItems = await Post.find(findOptions).sort({ date: -1 }).count();
+    totalItems = await Post.find(findOptions).count();
     posts = await Post.find(findOptions)
       .sort({ date: -1 })
       .skip((page - 1) * POSTS_PER_PAGE)
@@ -173,6 +173,7 @@ const updatePost = async (req, res, next) => {
 
 const getPostsByNickname = async (req, res, next) => {
   const nickname = req.params.uid;
+  let { page, name, category } = req.query;
 
   let fetchedUser;
   try {
@@ -185,9 +186,33 @@ const getPostsByNickname = async (req, res, next) => {
     return next(new HttpError("User doesn't exist.", 400));
   }
 
+  if (!page) {
+    page = 1;
+  }
+
+  const findOptions = { creator: fetchedUser._id };
+
+  if (name) {
+    findOptions.title = {
+      $regex: name,
+      $options: "i",
+    };
+  }
+
+  if (category) {
+    findOptions.category = category;
+  }
+
+  console.log(findOptions);
+
+  let totalItems = 0;
   let fetchedPosts;
   try {
-    fetchedPosts = await Post.find({ creator: fetchedUser._id })
+    totalItems = await Post.find(findOptions).count();
+    fetchedPosts = await Post.find(findOptions)
+      .sort({ date: -1 })
+      .skip((page - 1) * POSTS_PER_PAGE)
+      .limit(POSTS_PER_PAGE)
       .populate("creator", "nickname image")
       .select("title creator image");
   } catch (err) {
@@ -196,6 +221,13 @@ const getPostsByNickname = async (req, res, next) => {
 
   res.json({
     posts: fetchedPosts.map((post) => post.toObject({ getters: true })),
+    totalPosts: totalItems,
+    hasPreviousPage: page > 1,
+    hasNextPage: POSTS_PER_PAGE * page < totalItems,
+    previousPage: page - 1,
+    nextPage: +page + 1,
+    totalPages: Math.ceil(totalItems / POSTS_PER_PAGE),
+    currentPage: +page,
   });
 };
 
