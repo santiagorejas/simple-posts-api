@@ -19,7 +19,7 @@ router.delete("/:pid", checkAuth, postsController.deletePost);
 
 router.patch("/:pid", checkAuth, postsController.updatePost);
 
-router.get("/user/:uid", postsController.getPostsByUserId);
+router.get("/user/:uid", postsController.getPostsByNickname);
 
 router.post("/like/:pid", checkAuth, postsController.likePost);
 

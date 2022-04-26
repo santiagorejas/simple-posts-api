@@ -171,18 +171,31 @@ const updatePost = async (req, res, next) => {
   });
 };
 
-const getPostsByUserId = async (req, res, next) => {
-  const userId = req.params.uid;
+const getPostsByNickname = async (req, res, next) => {
+  const nickname = req.params.uid;
+
+  let fetchedUser;
+  try {
+    fetchedUser = await User.findOne({ nickname });
+  } catch (err) {
+    return next(new HttpError("Fetching user failed.", 500));
+  }
+
+  if (!fetchedUser) {
+    return next(new HttpError("User doesn't exist.", 400));
+  }
 
   let fetchedPosts;
   try {
-    fetchedPosts = await Post.find({ creator: userId });
+    fetchedPosts = await Post.find({ creator: fetchedUser._id })
+      .populate("creator", "nickname image")
+      .select("title creator image");
   } catch (err) {
     return next(new HttpError("Fetching posts failed.", 500));
   }
 
   res.json({
-    post: fetchedPosts,
+    posts: fetchedPosts.map((post) => post.toObject({ getters: true })),
   });
 };
 
@@ -253,6 +266,6 @@ exports.createPost = createPost;
 exports.getPosts = getPosts;
 exports.deletePost = deletePost;
 exports.updatePost = updatePost;
-exports.getPostsByUserId = getPostsByUserId;
+exports.getPostsByNickname = getPostsByNickname;
 exports.getPostDetails = getPostDetails;
 exports.likePost = likePost;
