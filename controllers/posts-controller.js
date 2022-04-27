@@ -1,5 +1,12 @@
+const fs = require("fs");
+const util = require("util");
+const path = require("path");
+const unlinkFile = util.promisify(fs.unlink);
+
 const mongoose = require("mongoose");
 const HttpError = require("../models/http-errors");
+
+const { uploadFile } = require("../s3");
 
 const Post = require("../models/post");
 const User = require("../models/user");
@@ -75,9 +82,11 @@ const createPost = async (req, res, next) => {
 
   const date = new Date();
 
+  const result = await uploadFile(req.file);
+
   const createdPost = new Post({
     title,
-    image: req.file.path,
+    image: `/images/${result.Key}`,
     description,
     creator: req.userData.id,
     category,
@@ -96,6 +105,8 @@ const createPost = async (req, res, next) => {
   } catch (err) {
     return next("Saving post failed.", 500);
   }
+
+  await unlinkFile(req.file.path);
 
   res.json({
     post: createdPost,
@@ -202,8 +213,6 @@ const getPostsByNickname = async (req, res, next) => {
   if (category) {
     findOptions.category = category;
   }
-
-  console.log(findOptions);
 
   let totalItems = 0;
   let fetchedPosts;

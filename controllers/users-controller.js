@@ -63,11 +63,8 @@ const signup = async (req, res, next) => {
     password: hashedPassword,
     posts: [],
     likes: [],
+    image: req.file ? req.file.path : "uploads/images/default.png",
   });
-
-  if (req.file) {
-    createdUser.image = req.file.path;
-  }
 
   try {
     await createdUser.save();
@@ -123,7 +120,6 @@ const getProfileData = async (req, res, next) => {
   try {
     userData = await User.findById(userId);
   } catch (err) {
-    console.log(err);
     return next(new HttpError("Fetching user data failed.", 500));
   }
 

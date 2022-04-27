@@ -5,6 +5,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 require("dotenv").config();
+const { getFileStream } = require("./s3");
 
 const app = express();
 
@@ -27,6 +28,13 @@ app.get("/", (req, res, next) => {
 app.use("/api/user", usersRoutes);
 app.use("/api/post", postsRoutes);
 app.use("/api/comment", commentsRoutes);
+
+app.get("/api/images/:key", (req, res, next) => {
+  const key = req.params.key;
+  const readStream = getFileStream(key);
+
+  readStream.pipe(res);
+});
 
 app.use((err, req, res, next) => {
   if (req.file) {

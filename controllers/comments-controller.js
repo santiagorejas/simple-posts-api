@@ -43,14 +43,13 @@ const createComment = async (req, res, next) => {
     await fetchedPost.save({ session, validateModifiedOnly: true });
     session.commitTransaction();
   } catch (err) {
-    console.log(err);
     return next(new HttpError("Saving comment failed.", 500));
   }
 
   createdComment.author = fetchedUser;
 
   res.json({
-    comment: createdComment,
+    comment: createdComment.toObject({ getters: true }),
   });
 };
 
