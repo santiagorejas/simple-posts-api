@@ -5,6 +5,8 @@ const User = require("../models/user");
 const Post = require("../models/post");
 const HttpError = require("../models/http-errors");
 
+const COMMENTS_PER_PAGE = 5;
+
 const createComment = async (req, res, next) => {
   const { content, post } = req.body;
   const creator = req.userData.id;
@@ -52,6 +54,37 @@ const createComment = async (req, res, next) => {
   });
 };
 
+const getComments = async (req, res, next) => {
+  const postId = req.params.pid;
+  let { page } = req.query;
+
+  if (!page) page = 1;
+
+  let totalItems = 0;
+  let comments = [];
+  try {
+    totalItems = await Comment.find({ post: postId }).count();
+    comments = await Comment.find({ post: postId })
+      .sort({ date: -1 })
+      .skip((page - 1) * COMMENTS_PER_PAGE)
+      .limit(COMMENTS_PER_PAGE)
+      .populate("author", "nickname image");
+  } catch (err) {
+    return next(new HttpError("Fetching comments failed.", 500));
+  }
+
+  res.json({
+    comments: comments.map((c) => c.toObject({ getters: true })),
+    totalComments: totalItems,
+    hasPreviousPage: page > 1,
+    hasNextPage: COMMENTS_PER_PAGE * page < totalItems,
+    previousPage: page - 1,
+    nextPage: +page + 1,
+    totalPages: Math.ceil(totalItems / COMMENTS_PER_PAGE),
+    currentPage: +page,
+  });
+};
+
 const deleteComment = async (req, res, next) => {
   const commentId = req.params.cid;
 
@@ -88,4 +121,5 @@ const deleteComment = async (req, res, next) => {
 };
 
 exports.createComment = createComment;
+exports.getComments = getComments;
 exports.deleteComment = deleteComment;

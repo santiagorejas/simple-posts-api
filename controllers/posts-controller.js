@@ -237,13 +237,13 @@ const getPostDetails = async (req, res, next) => {
   let post;
   try {
     post = await Post.findById(postId)
-      .populate("comments likes")
+      .populate("likes")
       .populate("creator", "nickname image");
-    await Promise.all(
-      post.comments.map((comment) =>
-        comment.populate("author", "nickname image")
-      )
-    );
+    // await Promise.all(
+    //   post.comments.map((comment) =>
+    //     comment.populate("author", "nickname image")
+    //   )
+    // );
   } catch (err) {
     return next(new HttpError("Fetching post failed.", 500));
   }
