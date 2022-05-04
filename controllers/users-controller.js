@@ -1,8 +1,13 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
+const { uploadFile } = require("../s3");
+
 const HttpError = require("../models/http-errors");
 const User = require("../models/user");
+const Post = require("../models/post");
+
+const POSTS_PER_PAGE = 12;
 
 const generateToken = (id, nickname, email) => {
   let token;
@@ -57,13 +62,15 @@ const signup = async (req, res, next) => {
     );
   }
 
+  const result = await uploadFile(req.file);
+
   const createdUser = new User({
     nickname,
     email,
     password: hashedPassword,
     posts: [],
     likes: [],
-    image: req.file ? req.file.path : "uploads/images/default.png",
+    image: req.file ? `/images/${result.Key}` : "/images/default.png",
   });
 
   try {
@@ -137,6 +144,62 @@ const getProfileData = async (req, res, next) => {
   });
 };
 
+const getLikesByNickname = async (req, res, next) => {
+  const nickname = req.params.uid;
+
+  let { page, name, category } = req.query;
+
+  let fetchedUser;
+  try {
+    fetchedUser = await User.findOne({ nickname });
+
+    if (!fetchedUser) return next(new HttpError("User doesn't exist."), 404);
+  } catch (err) {
+    return next(new HttpError("Fetching user failed."), 500);
+  }
+
+  if (!page) {
+    page = 1;
+  }
+
+  const findOptions = { _id: { $in: fetchedUser.likes } };
+  if (name) {
+    findOptions.title = {
+      $regex: name,
+      $options: "i",
+    };
+  }
+
+  if (category) {
+    findOptions.category = category;
+  }
+
+  totalItems = fetchedUser.likes.length;
+  let fetchedPosts;
+  try {
+    fetchedPosts = await Post.find(findOptions)
+      .sort({ date: -1 })
+      .skip((page - 1) * POSTS_PER_PAGE)
+      .limit(POSTS_PER_PAGE)
+      .populate("creator", "nickname image")
+      .select("title creator image");
+  } catch (err) {
+    return next(new HttpError("Fetching posts failed.", 500));
+  }
+
+  res.json({
+    posts: fetchedPosts.map((post) => post.toObject({ getters: true })),
+    totalPosts: totalItems,
+    hasPreviousPage: page > 1,
+    hasNextPage: POSTS_PER_PAGE * page < totalItems,
+    previousPage: page - 1,
+    nextPage: +page + 1,
+    totalPages: Math.ceil(totalItems / POSTS_PER_PAGE),
+    currentPage: +page,
+  });
+};
+
 exports.signup = signup;
 exports.login = login;
 exports.getProfileData = getProfileData;
+exports.getLikesByNickname = getLikesByNickname;

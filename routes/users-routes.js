@@ -16,4 +16,6 @@ router.post("/signup", fileUpload.single("image"), usersController.signup);
 
 router.get("/profile/:uid", usersController.getProfileData);
 
+router.get("/likes/:uid", usersController.getLikesByNickname);
+
 module.exports = router;
