@@ -9,10 +9,10 @@ const postsController = require("../controllers/posts-controller");
 router.get("/", postsController.getPosts);
 
 router.post(
-  "/",
-  checkAuth,
-  fileUpload.single("image"),
-  postsController.createPost
+    "/",
+    checkAuth,
+    fileUpload.single("image"),
+    postsController.createPost
 );
 
 router.delete("/:pid", checkAuth, postsController.deletePost);
