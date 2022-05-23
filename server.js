@@ -20,9 +20,9 @@ app.use(bodyParser.json());
 app.use("/uploads/images", express.static(path.join("uploads", "images")));
 
 app.get("/", (req, res, next) => {
-  res.json({
-    message: "Hello World!",
-  });
+    res.json({
+        message: "Hello World!",
+    });
 });
 
 app.use("/api/user", usersRoutes);
@@ -30,31 +30,31 @@ app.use("/api/post", postsRoutes);
 app.use("/api/comment", commentsRoutes);
 
 app.get("/api/images/:key", (req, res, next) => {
-  const key = req.params.key;
-  const readStream = getFileStream(key);
+    const key = req.params.key;
+    const readStream = getFileStream(key);
 
-  readStream.pipe(res);
+    readStream.pipe(res);
 });
 
 app.use((err, req, res, next) => {
-  if (req.file) {
-    fs.unlink(req.file.path, (err) => console.log(err));
-  }
+    if (req.file) {
+        fs.unlink(req.file.path, (err) => console.log(err));
+    }
 
-  if (res.headerSent) {
-    return next(err);
-  }
+    if (res.headerSent) {
+        return next(err);
+    }
 
-  res.status(err.code || 500).json({
-    message: err.message || "An unknow error ocurred!",
-  });
+    res.status(err.code || 500).json({
+        message: err.message || "An unknow error ocurred!",
+    });
 });
 
 mongoose
-  .connect(process.env.MONGODB_SRV)
-  .then(() => {
-    app.listen(5000);
-  })
-  .catch((err) => {
-    console.log(err);
-  });
+    .connect(process.env.MONGODB_SRV)
+    .then(() => {
+        app.listen(process.env.PORT || 5000);
+    })
+    .catch((err) => {
+        console.log(err);
+    });
