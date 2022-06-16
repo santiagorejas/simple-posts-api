@@ -14,6 +14,7 @@ const cors = require("./middlewares/cors");
 const usersRoutes = require("./routes/users-routes");
 const postsRoutes = require("./routes/posts-routes");
 const commentsRoutes = require("./routes/comments-routes");
+const HttpError = require("./models/http-errors");
 
 app.use(cors);
 app.use(bodyParser.json());
@@ -33,7 +34,11 @@ app.get("/api/images/:key", (req, res, next) => {
     const key = req.params.key;
     const readStream = getFileStream(key);
 
-    readStream.pipe(res);
+    onError = () => {
+        return next(new HttpError("Fetching image failed.", 500));
+    };
+
+    readStream.on("error", onError).pipe(res);
 });
 
 app.use((err, req, res, next) => {
